@@ -1,77 +1,102 @@
-// sketch.js - Spherical galaxy distribution
+// sketch.js - Added Galaxy Types and Placeholder Visuals
 
 let galaxies = [];
-const numGalaxies = 2500; // Adjusted number, tune as needed
+const numGalaxies = 2000; // Adjusted number
 let massiveObject;
-let zoom = 0.8; // Start slightly more zoomed in
+let zoom = 0.8;
 let isDragging = false;
 let lastMouseX, lastMouseY;
 let rotX = Math.PI / 12;
 let rotY = 0;
 let canvas;
 
+// --- Galaxy Types (from provided 2D code) ---
+const GALAXY_TYPES = ['elliptical', 'spiral', 'barred_spiral', 'ringed_spiral', 'irregular', 'lenticular', 'edge_on_spiral'];
+
 // --- Lensing Parameters ---
 let einsteinRadiusSq = 18000;
-let deflectionStrength = einsteinRadiusSq * 1.5; // Slightly increased strength
+let deflectionStrength = einsteinRadiusSq * 1.5;
 
 // --- Galaxy Distribution Parameters ---
-const minGalaxyDist = 2000; // Minimum distance from center
-const maxGalaxyDist = 4000; // Maximum distance from center
+const minGalaxyDist = 2000;
+const maxGalaxyDist = 4000;
 
-// --- Dust Cloud Data ---
-let dustClouds = [];
+// --- Preload Function (Example for loading textures later) ---
+/*
+let galaxyTextures = {};
+function preload() {
+  // Example: Load textures for each type here
+  // galaxyTextures['spiral'] = loadImage('textures/spiral.png');
+  // galaxyTextures['elliptical'] = loadImage('textures/elliptical.png');
+  // ... etc for all types in GALAXY_TYPES
+  console.log("preload() finished - Textures would be loaded here.");
+}
+*/
+
 
 function setup() {
   canvas = createCanvas(windowWidth, windowHeight, WEBGL);
   canvas.parent('canvas-container');
-  console.log("Setup: Spherical Galaxy Distribution. Canvas:", width, height);
+  console.log("Setup: Added Galaxy Types. Canvas:", width, height);
 
-  massiveObject = { x: 0, y: 0, z: 0 }; // Keep lens at origin
+  massiveObject = { x: 0, y: 0, z: 0 }; // Lens at origin
   console.log("Massive object defined at origin");
 
-  // Create background galaxies in a SPHERICAL SHELL
+  // Create background galaxies with TYPE, COLOR and size variation
   galaxies = [];
   console.log(`Creating ${numGalaxies} galaxies between ${minGalaxyDist} and ${maxGalaxyDist} distance...`);
   for (let i = 0; i < numGalaxies; i++) {
-    // --- Spherical Position ---
-    // Uniform volume distribution within the shell
+    // Spherical Position
     let r = lerp(minGalaxyDist, maxGalaxyDist, pow(random(), 1/3));
-    let theta = random(TWO_PI); // Angle around Y axis (0 to 360)
-    let phi = acos(random(-1, 1)); // Angle from Y axis (0 to 180)
-
-    // Convert spherical to Cartesian coordinates
+    let theta = random(TWO_PI);
+    let phi = acos(random(-1, 1));
     let x = r * sin(phi) * cos(theta);
     let y = r * sin(phi) * sin(theta);
     let z = r * cos(phi);
 
-    // --- Galaxy Color ---
-    let colR = random(180, 255); let colG = random(180, 255); let colB = random(180, 255);
-    let randColor = random();
-    if (randColor < 0.35) { colB = 255; colG = random(180, 230); colR = random(180, 230); } // Bluish
-    else if (randColor < 0.6) { colB = random(150, 200); colG = random(200, 255); colR = 255; } // Yellowish
-    // Remaining are whitish
+    // --- Assign Galaxy Type ---
+    let type = GALAXY_TYPES[Math.floor(Math.random() * GALAXY_TYPES.length)];
+
+    // --- Placeholder Color based on Type ---
+    // (You would replace this if using textures)
+    let baseColor;
+    let aspect = 1.0; // Aspect ratio for scaling sphere
+    switch (type) {
+        case 'elliptical':
+        case 'lenticular':
+            baseColor = color(255, 240, 200); // Yellowish/White
+            aspect = random(0.5, 0.9); // More elliptical
+            break;
+        case 'spiral':
+        case 'barred_spiral':
+        case 'ringed_spiral':
+            baseColor = color(200, 220, 255); // Bluish/White arms/disk
+             break;
+        case 'irregular':
+             baseColor = color(180, 180, 255); // More blue/patchy
+             break;
+        case 'edge_on_spiral':
+             baseColor = color(240, 210, 190); // Dusty reddish/yellow core hint
+             aspect = random(0.1, 0.3); // Very flat
+             break;
+        default:
+             baseColor = color(220, 220, 220);
+    }
 
     // --- Galaxy Size ---
-    let baseSize = random(1.5, 5.0); // Slightly larger max size
-    // Optional: make slightly dimmer/smaller further away within the shell
+    let baseSize = random(2.0, 5.5); // Adjusted size range
     let sizeFactor = map(r, minGalaxyDist, maxGalaxyDist, 1.1, 0.8);
     let galaxySize = baseSize * sizeFactor;
 
     galaxies.push({
-      x: x, y: y, z: z, // Use calculated spherical positions
+      x: x, y: y, z: z,
+      type: type, // Store the type
       size: galaxySize,
-      color: color(colR, colG, colB)
+      color: baseColor, // Store the representative color
+      aspect: aspect // Store aspect for potential scaling
     });
   }
   console.log(galaxies.length + " galaxies created.");
-
-  // --- Initialize Dust Clouds (Example Placeholder) ---
-  dustClouds = [
-    { x: -500, y: 200, z: -1000, baseColor: color(255, 100, 100, 100), size: 400, particles: 80 }, // Reddish
-    { x: 600, y: -100, z: -1400, baseColor: color(100, 150, 255, 100), size: 500, particles: 100 } // Bluish
-  ];
-  console.log("Dust clouds initialized.");
-
   console.log("Setup complete.");
 }
 
@@ -83,82 +108,63 @@ function draw() {
   background(0);
 
   // --- Camera and View Setup ---
-  // Set perspective matrix (Field of View, Aspect Ratio, Near Clip, Far Clip)
-  let fov = PI / 3; // 60 degrees field of view
-  let aspect = width / height;
-  let nearClip = 0.1;
-  // Ensure far clip plane includes the most distant galaxies AND dust clouds
-  let farClip = maxGalaxyDist * 1.5; // Make sure it's far enough
+  let fov = PI / 3; let aspect = width / height;
+  let nearClip = 0.1; let farClip = maxGalaxyDist * 1.5;
   perspective(fov, aspect, nearClip, farClip);
-
-  // Set camera position and orientation
-  // Pull camera back slightly further to see the spherical distribution better initially
-  let camDist = (height / 2.0) / tan(fov / 2.0) * 1.2; // Adjusted distance
+  let camDist = (height / 2.0) / tan(fov / 2.0) * 1.2;
   camera(0, 0, camDist, 0, 0, 0, 0, 1, 0);
-
-  // Apply user rotation and zoom
   rotateX(rotX); rotateY(rotY); scale(zoom);
-  // No need to translate view since lens and galaxies are relative to origin (0,0,0)
 
-  // --- Draw Dust Clouds (Placeholder - drawn behind galaxies) ---
-  drawDustClouds();
-
-  // --- Draw Massive Object (Lens) ---
+  // --- Draw Massive Object (Lens - Blue Dot) ---
   push();
-  // Positioned at the origin
-  noStroke();
-  fill(100, 150, 255); // Blue sphere
-  sphere(25);
+  noStroke(); fill(100, 150, 255); sphere(25);
   pop();
-
 
   // --- Draw Galaxies with Lensing ---
   if (galaxies && galaxies.length > 0) {
       for (let gal of galaxies) {
-          // Calculate distortion based on projected XY position relative to lens (at origin)
-          let distortedPos = calculateDistortion(gal.x, gal.y, 0, 0); // Lens is at 0,0
+          let distortedPos = calculateDistortion(gal.x, gal.y, 0, 0);
 
           push();
-          // Draw galaxy at its original Z depth but distorted XY world position
           translate(distortedPos.x, distortedPos.y, gal.z);
-          fill(gal.color);
+
+          // ---=== Placeholder: Draw sphere based on type ===---
+          // This is where you would replace the sphere with a
+          // textured plane facing the camera (billboard)
+
+          /* --- Example Texture/Sprite Logic (Conceptual) ---
+          let tex = galaxyTextures[gal.type] || defaultTexture; // Get preloaded texture
+          let planeWidth = gal.size * 2; // Adjust sizing as needed
+          let planeHeight = gal.size * 2;
+
+          // Billboard rotation (make plane face camera) - Requires more complex math/p5 methods
+           // Simplified: Assume view is mostly forward, just draw plane
+          // More complex: Calculate angle to camera and rotate
+
+          texture(tex);
+          plane(planeWidth, planeHeight);
+          */
+
+          // --- Current Placeholder Implementation ---
+          fill(gal.color); // Use color based on type
           noStroke();
+          push(); // Apply scaling locally
+          // Apply aspect ratio scaling for certain types
+          if (gal.type === 'elliptical' || gal.type === 'lenticular' || gal.type === 'edge_on_spiral') {
+             scale(1, gal.aspect, 1); // Scale sphere vertically
+          }
           sphere(gal.size);
+          pop(); // Restore scale
+          // --- End Placeholder ---
+
           pop();
       }
   }
 
 } // End draw()
 
-// --- Dust Cloud Drawing Function (Placeholder) ---
-function drawDustClouds() {
-    for (let cloud of dustClouds) {
-        push();
-        // Go to cloud's base position
-        translate(cloud.x, cloud.y, cloud.z);
-        // Simple placeholder: draw overlapping transparent spheres
-        noStroke();
-        for (let i = 0; i < cloud.particles; i++) {
-            let r = cloud.baseColor.levels[0] + random(-30, 30);
-            let g = cloud.baseColor.levels[1] + random(-30, 30);
-            let b = cloud.baseColor.levels[2] + random(-30, 30);
-            let a = cloud.baseColor.levels[3] * random(0.1, 0.5); // Vary alpha
-            let particleSize = cloud.size * random(0.05, 0.2);
-            let particleX = random(-cloud.size / 2, cloud.size / 2);
-            let particleY = random(-cloud.size / 2, cloud.size / 2);
-            let particleZ = random(-cloud.size / 2, cloud.size / 2);
-            fill(r, g, b, a);
-            push();
-            translate(particleX, particleY, particleZ);
-            sphere(particleSize);
-            pop();
-        }
-        pop();
-    }
-}
 
-
-// --- Lensing Calculation ---
+// --- Lensing Calculation (Produces stretching/arcs) ---
 function calculateDistortion(starX, starY, lensX, lensY) {
   let dx = starX - lensX; let dy = starY - lensY;
   let rSq = dx*dx + dy*dy;
@@ -176,7 +182,7 @@ function mouseDragged() {
   if (isDragging) {
     let deltaX = mouseX - lastMouseX; let deltaY = mouseY - lastMouseY;
     rotY += deltaX * 0.005; rotX -= deltaY * 0.005;
-    rotX = constrain(rotX, -PI*1.0, PI*1.0); // Allow more rotation up/down
+    rotX = constrain(rotX, -PI, PI);
     lastMouseX = mouseX; lastMouseY = mouseY;
   }
 }
@@ -193,8 +199,8 @@ function mouseReleased() {
 
 function mouseWheel(event) {
    zoom -= event.delta * 0.001 * zoom;
-   zoom = constrain(zoom, 0.01, 50); // Even wider zoom
-   return false;
+   zoom = constrain(zoom, 0.01, 50);
+   return false; // Prevent page scrolling
 }
 
-console.log("sketch.js with spherical distribution loaded.");
+console.log("sketch.js with galaxy types loaded.");
