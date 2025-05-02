@@ -1,0 +1,73 @@
+body {
+    font-family: sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    background-color: #222;
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2em; /* Relative unit */
+}
+
+main {
+    max-width: 900px; /* Limit content width */
+    margin: 20px auto; /* Center the main content */
+    padding: 0 20px;
+}
+
+section {
+    background-color: #fff;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h2 {
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 0;
+}
+
+#canvas-container {
+    display: flex; /* Use flexbox for centering */
+    justify-content: center; /* Center canvas horizontally */
+    align-items: center; /* Center canvas vertically (if container has height) */
+    margin-bottom: 20px;
+    border: 1px solid #ccc; /* Optional border around canvas */
+    background-color: #000; /* Match canvas background */
+    min-height: 600px; /* Ensure container has height for alignment */
+}
+
+/* Ensure canvas itself doesn't add extra margins */
+canvas {
+    display: block; /* Prevent inline spacing issues */
+}
+
+
+#hashtags p {
+    font-size: 0.9em;
+    color: #555;
+    word-spacing: 10px; /* Add spacing between hashtags */
+    text-align: center;
+}
+
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    font-size: 0.8em;
+    color: #777;
+    border-top: 1px solid #eee;
+}
