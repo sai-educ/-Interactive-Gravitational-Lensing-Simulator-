@@ -1,172 +1,175 @@
-// sketch.js - Using the user-provided specific version
+// sketch.js - Improved lensing calculation and galaxy colors
 
-let stars = [];
-const numStars = 1000; // Using value from provided code
+let galaxies = []; // Renamed back from stars
+const numGalaxies = 1500; // Adjusted for potentially better performance/clarity
 let massiveObject;
-let zoom = 1;
+let zoom = 0.8; // Adjusted initial zoom
 let isDragging = false;
 let lastMouseX, lastMouseY;
-let rotX = 0;
+let rotX = Math.PI / 12; // Slightly less initial tilt
 let rotY = 0;
-let canvas; // Added for parenting
+let canvas;
+
+// --- Lensing Parameters (Tune these!) ---
+// Using parameters known to create arcs/stretching
+let einsteinRadiusSq = 18000; // Controls the 'size' of the lensing effect area (squared)
+let deflectionStrength = einsteinRadiusSq * 1.5; // Strength of deflection (Adjust for more/less stretching)
+// -----------------------------------------
+
 
 function setup() {
-  // Modified for fullscreen and parenting
   canvas = createCanvas(windowWidth, windowHeight, WEBGL);
   canvas.parent('canvas-container');
+  console.log("Setup: Improved Lensing & Colors. Canvas:", width, height);
 
-  console.log("Using original setup logic. Canvas:", width, height);
-
-  // Create background stars (from provided code)
-  let starSpread = max(width, height) * 1.5; // Adjust spread based on canvas size
-  let starDepth = 1000; // Use depth from original code range
-  for (let i = 0; i < numStars; i++) {
-    stars.push({
-      x: random(-starSpread, starSpread), // Use adjusted spread
-      y: random(-starSpread, starSpread), // Use adjusted spread
-      z: random(-starDepth, -starDepth / 2), // Use original Z range idea
-      size: random(1, 3)
-    });
-  }
-  console.log(stars.length + " stars created.");
-
-  // Create massive object (from provided code)
+  // Define massive object (Lens) - Kept as blue sphere
   massiveObject = {
     x: 0,
     y: 0,
-    z: -200, // Using original Z
-    mass: 500 // Using original mass
+    z: -100, // Bring lens slightly closer? Adjust as needed.
   };
-  console.log("Massive object created.");
+  console.log("Massive object defined at z =", massiveObject.z);
+
+  // Create background galaxies with COLOR and size variation
+  let spread = max(width, height) * 3; // Adjust spread
+  let depth = spread * 2.5; // Increase depth range
+  galaxies = [];
+  console.log("Creating galaxies...");
+  for (let i = 0; i < numGalaxies; i++) {
+    // --- Galaxy Color ---
+    let r = random(180, 255); let g = random(180, 255); let b = random(180, 255);
+    let randColor = random();
+    if (randColor < 0.35) { b = 255; g = random(180, 230); r = random(180, 230); } // Bluish (more common)
+    else if (randColor < 0.6) { b = random(150, 200); g = random(200, 255); r = 255; } // Yellowish/Orangish
+    // Remaining are whitish
+
+    // --- Galaxy Size ---
+    let baseSize = random(1.5, 4.5);
+     // Place galaxies further back relative to lens Z
+    let galaxyZ = random(-depth, -depth * 0.4) + massiveObject.z; // Ensure they are behind lens Z
+    let distanceFactor = map(galaxyZ, -depth + massiveObject.z, -depth * 0.4 + massiveObject.z, 0.6, 1.1);
+    let galaxySize = baseSize * distanceFactor;
+
+    galaxies.push({
+      x: random(-spread, spread),
+      y: random(-spread, spread),
+      z: galaxyZ,
+      size: galaxySize,
+      color: color(r, g, b) // Store p5.Color object
+    });
+  }
+  console.log(galaxies.length + " galaxies created.");
   console.log("Setup complete.");
 }
 
-// Added for responsive fullscreen
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
 
 function draw() {
-  if (frameCount < 2) { console.log("Draw loop started."); } // Add brief log
-
   background(0);
 
-  // Apply rotations and zoom (from provided code)
-  rotateX(rotX);
-  rotateY(rotY);
-  scale(zoom);
+  // Apply view transformations
+  let camZ = (height/2.0) / tan(PI*30.0/180.0);
+  camera(0, 0, camZ, 0, 0, 0, 0, 1, 0);
 
-  // Draw massive object (from provided code)
+  rotateX(rotX); rotateY(rotY); scale(zoom);
+  // Center view near the massive object's plane for easier observation
+  translate(-massiveObject.x, -massiveObject.y, -massiveObject.z);
+
+
+  // --- Draw Massive Object (Lens) ---
   push();
-  translate(massiveObject.x, massiveObject.y, massiveObject.z);
+  // No need to translate again if view is already centered
+  // translate(massiveObject.x, massiveObject.y, massiveObject.z);
+  translate(0, 0, 0); // Positioned at the origin of the translated view
   noStroke();
-  fill(100, 100, 255); // Original blue color
-  sphere(30); // Original size
+  fill(100, 150, 255); // Blue sphere
+  sphere(25); // Slightly smaller?
   pop();
 
-  // Draw stars with gravitational lensing effect (from provided code)
-  for (let star of stars) {
-    let distortedPosition = calculateDistortion(star);
 
-    push();
-    // Using original Z, distorted XY
-    translate(distortedPosition.x, distortedPosition.y, star.z);
-    fill(255); // Original white color
-    noStroke();
-    sphere(star.size);
-    pop();
+  // --- Draw Galaxies with Improved Lensing ---
+  if (galaxies && galaxies.length > 0) {
+      for (let gal of galaxies) {
+          // Calculate distortion based on projected XY position relative to lens center (0,0 in this view)
+          // Pass the galaxy's world position and the lens's world position
+          let distortedPos = calculateDistortion(gal.x, gal.y, massiveObject.x, massiveObject.y);
+
+          push();
+          // Draw galaxy at its original Z depth but distorted XY world position
+          // Note: We already translated the view, so distortedPos world coords work here
+          translate(distortedPos.x, distortedPos.y, gal.z);
+          fill(gal.color); // Use assigned galaxy color
+          noStroke();
+          sphere(gal.size);
+          pop();
+      }
+  } else {
+       if(frameCount < 2) console.warn("Galaxies array is missing or empty in draw loop!");
   }
 
-  // Draw lensing effect (from provided code)
-  drawLensingEffect();
+  // REMOVED call to drawLensingEffect();
 
 } // End draw()
 
 
-// calculateDistortion function (exactly as provided by user)
-function calculateDistortion(star) {
-  let dx = star.x - massiveObject.x;
-  let dy = star.y - massiveObject.y;
-  let dz = star.z - massiveObject.z; // Original includes Z in distance calc
-  let distance = sqrt(dx*dx + dy*dy + dz*dz); // Original uses 3D distance
+// calculateDistortion function (Using 1/r^2 version for better arcs/stretching)
+function calculateDistortion(starX, starY, lensX, lensY) {
+  // Calculate vector from lens center to star's projected position (in XY plane)
+  let dx = starX - lensX;
+  let dy = starY - lensY;
 
-  // Prevent division by zero if distance is extremely small
-  if (distance < 0.1) {
-      distance = 0.1;
-  }
+  // Squared distance from lens center in the XY plane
+  let rSq = dx*dx + dy*dy;
 
-  let angle = atan2(dy, dx); // Angle in XY plane
-  let distortionFactor = massiveObject.mass / distance; // Original factor calc
+   let minRSq = 25.0; // Minimum distance squared - adjust if needed
+   if (rSq < minRSq) {
+     rSq = minRSq;
+   }
 
-  // Apply distortion based on original logic
-  let distortedX = star.x + distortionFactor * cos(angle);
-  let distortedY = star.y + distortionFactor * sin(angle);
+  // Gravitational Lensing Approximation: Stronger effect closer to center
+  // theta_vec approx = beta_vec * (1 + Deflection_Strength / rSq)
+  let factor = 1 + deflectionStrength / rSq;
 
-  // Original returned only X, Y implicitly in a vector
-  return createVector(distortedX, distortedY);
+  // Calculate distorted WORLD coordinates
+  let distortedX = lensX + dx * factor;
+  let distortedY = lensY + dy * factor;
+
+  return createVector(distortedX, distortedY); // Return vector with distorted X, Y
 }
 
-// drawLensingEffect function (exactly as provided by user)
-function drawLensingEffect() {
-  push();
-  noFill();
-  stroke(100, 100, 255, 50); // Original faint blue lines
-  strokeWeight(2);
 
-  // Adjust loop step for potentially better performance if needed
-  for (let angle = 0; angle < TWO_PI; angle += 0.1) {
-    // Radius calculation based on original code
-    let radius = massiveObject.mass * 0.5;
-    // Use massiveObject position directly (original logic)
-    let x = massiveObject.x + radius * cos(angle);
-    let y = massiveObject.y + radius * sin(angle);
-    let z = massiveObject.z;
+// REMOVED drawLensingEffect function
 
-    beginShape();
-    // Loop creates the radiating line effect
-    for (let t = 0; t <= 1; t += 0.1) {
-      let lensedX = lerp(x, x * 1.5, t);
-      let lensedY = lerp(y, y * 1.5, t);
-      let lensedZ = lerp(z, z - 100, t);
-      vertex(lensedX, lensedY, lensedZ);
-    }
-    endShape();
-  }
 
-  pop();
-}
-
-// mouseDragged function (exactly as provided by user)
+// --- Mouse Interaction Functions ---
 function mouseDragged() {
   if (isDragging) {
-    let deltaX = mouseX - lastMouseX;
-    let deltaY = mouseY - lastMouseY;
-    // Using map function for rotation sensitivity based on original code
-    rotY += map(deltaX, 0, width, 0, TWO_PI) * 0.5;
-    rotX += map(deltaY, 0, height, 0, TWO_PI) * 0.5;
-    lastMouseX = mouseX;
-    lastMouseY = mouseY;
+    let deltaX = mouseX - lastMouseX; let deltaY = mouseY - lastMouseY;
+    // Using simpler rotation mapping
+    rotY += deltaX * 0.005; rotX -= deltaY * 0.005;
+    rotX = constrain(rotX, -PI/2 * 0.95, PI/2 * 0.95);
+    lastMouseX = mouseX; lastMouseY = mouseY;
   }
 }
 
-// mousePressed function (exactly as provided by user)
 function mousePressed() {
+  // Simplified interaction - starts drag anywhere outside overlay (potentially)
   lastMouseX = mouseX;
   lastMouseY = mouseY;
   isDragging = true;
 }
 
-// mouseReleased function (exactly as provided by user)
 function mouseReleased() {
   isDragging = false;
 }
 
-// mouseWheel function (exactly as provided by user)
 function mouseWheel(event) {
-  // Original zoom logic
-  zoom += event.delta * -0.001;
-  zoom = constrain(zoom, 0.5, 5); // Original zoom limits
-  return false; // Prevent page scrolling
+   // Simplified zoom
+   zoom -= event.delta * 0.001 * zoom;
+   zoom = constrain(zoom, 0.02, 30); // Adjusted zoom limits
+   return false; // Prevent page scrolling
 }
 
-console.log("Original sketch.js logic loaded (adapted for fullscreen).");
+console.log("sketch.js with improved lensing and colors loaded.");
