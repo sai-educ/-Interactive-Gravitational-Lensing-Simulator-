@@ -1,73 +1,116 @@
-body {
-    font-family: sans-serif;
-    line-height: 1.6;
+/* Basic Reset & Fullscreen Setup */
+html, body {
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
-    color: #333;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Prevent scrollbars from page content */
+    background-color: #000; /* Black background for the page */
+    color: #fff; /* White text */
+    font-family: sans-serif;
+    line-height: 1.6;
 }
 
-header {
-    background-color: #222;
-    color: #fff;
-    padding: 1rem 0;
-    text-align: center;
-}
-
-h1 {
-    margin: 0;
-    font-size: 2em; /* Relative unit */
-}
-
-main {
-    max-width: 900px; /* Limit content width */
-    margin: 20px auto; /* Center the main content */
-    padding: 0 20px;
-}
-
-section {
-    background-color: #fff;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-h2 {
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-    margin-top: 0;
-}
-
+/* Canvas container fills the entire screen */
 #canvas-container {
-    display: flex; /* Use flexbox for centering */
-    justify-content: center; /* Center canvas horizontally */
-    align-items: center; /* Center canvas vertically (if container has height) */
-    margin-bottom: 20px;
-    border: 1px solid #ccc; /* Optional border around canvas */
-    background-color: #000; /* Match canvas background */
-    min-height: 600px; /* Ensure container has height for alignment */
+    position: fixed; /* Fix position */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Canvas is in the background */
 }
 
-/* Ensure canvas itself doesn't add extra margins */
 canvas {
     display: block; /* Prevent inline spacing issues */
+    width: 100%;
+    height: 100%;
 }
 
-
-#hashtags p {
-    font-size: 0.9em;
-    color: #555;
-    word-spacing: 10px; /* Add spacing between hashtags */
-    text-align: center;
+/* Info Overlay Container */
+.info-overlay {
+    position: fixed; /* Fix position */
+    top: 10px;
+    left: 10px;
+    width: calc(100% - 20px); /* Consider padding */
+    max-width: 500px; /* Limit width for readability */
+    z-index: 10; /* Info is above the canvas */
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
+    border-radius: 5px;
+    padding: 5px;
 }
 
-footer {
-    text-align: center;
-    margin-top: 30px;
-    padding: 15px;
+/* Styling for Collapsible Sections */
+.info-section {
+    margin-bottom: 5px;
+}
+
+.info-section summary {
+    padding: 8px 12px;
+    background-color: rgba(50, 50, 50, 0.8);
+    color: #eee;
+    cursor: pointer;
+    border-radius: 3px;
+    outline: none; /* Remove focus outline */
+    list-style: none; /* Remove default marker (like triangle) */
+    transition: background-color 0.2s ease;
+}
+
+.info-section summary:hover {
+     background-color: rgba(80, 80, 80, 0.9);
+}
+
+/* Style for the arrow marker if desired (optional) */
+.info-section summary::before {
+    content: '▶ '; /* Collapsed state marker */
     font-size: 0.8em;
-    color: #777;
-    border-top: 1px solid #eee;
+    margin-right: 5px;
+}
+
+.info-section[open] summary::before {
+    content: '▼ '; /* Expanded state marker */
+}
+
+/* Hide default arrow in WebKit browsers */
+.info-section summary::-webkit-details-marker {
+    display: none;
+}
+
+
+.details-content {
+    padding: 15px;
+    background-color: rgba(20, 20, 20, 0.85);
+    border-radius: 0 0 3px 3px; /* Round bottom corners */
+    border-top: 1px solid #444; /* Separator line */
+}
+
+.details-content h2, .details-content h3 {
+    margin-top: 0;
+    color: #fff;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+}
+
+.details-content p {
+    margin-bottom: 10px;
+    font-size: 0.95em;
+    color: #ccc;
+}
+
+.details-content strong {
+    color: #fff;
+}
+
+.license {
+    font-size: 0.8em !important;
+    color: #aaa !important;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.hashtags {
+     font-size: 0.8em !important;
+     color: #888 !important;
+     text-align: center;
+     word-spacing: 5px;
 }

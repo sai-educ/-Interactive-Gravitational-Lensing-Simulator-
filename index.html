@@ -2,54 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.js"></script>
     <link rel="stylesheet" href="style.css">
     <title>Interactive Gravitational Lensing Simulator</title>
 </head>
 <body>
 
-    <header>
-        <h1>Interactive Gravitational Lensing Simulator</h1>
-    </header>
+    <div id="canvas-container"></div>
 
-    <main>
-        <section id="description">
-            <h2>About this Simulation</h2>
-            <p>
-                This interactive visualization demonstrates how massive cosmic
-                objects, such as black holes or galaxies, bend light from distant stars,
-                creating stunning visual distortions in space.
-            </p>
-        </section>
-
-        <div id="canvas-container">
+    <div class="info-overlay">
+        <details class="info-section">
+            <summary>About & Instructions</summary>
+            <div class="details-content">
+                <h2>Interactive Gravitational Lensing Simulator</h2>
+                <p>
+                    This interactive visualization demonstrates how massive cosmic
+                    objects bend the path of light from distant background sources.
+                    This warping of spacetime, predicted by Einstein's General Relativity,
+                    acts like a natural lens, magnifying, distorting, and sometimes creating multiple images or rings (like Einstein Rings) of the background objects.
+                </p>
+                <p>
+                    The central bright spot represents the foreground 'lens' object (like a massive galaxy or black hole's gravitational influence), and the smaller points are background 'stars' or galaxies whose light is being bent on its way to you.
+                </p>
+                <h3>Instructions</h3>
+                <p>
+                    <strong>Rotate:</strong> Click and drag your mouse across the screen.<br>
+                    <strong>Zoom:</strong> Use your mouse wheel.<br>
+                    Observe how the distortion changes with perspective and zoom level, especially for stars appearing close to the central object.
+                </p>
+                 <p class="license">
+                    CreativeCommons Attribution NonCommercial ShareAlike
+                </p>
+                 <p class="hashtags">
+                    #GravitationalLensing #Astrophysics #InteractiveSimulation #SpaceVisualization #Cosmology #BlackHoles #GeneralRelativity #StellarDynamics #SpacetimeDistortion #P5js #CreativeCoding #ScienceVisualization #EinsteinRing
+                 </p>
             </div>
-
-        <section id="instructions">
-            <h2>Instructions</h2>
-            <p>
-                Click and drag your mouse across the screen to rotate the entire
-                scene. This allows you to observe the gravitational lensing effect from
-                different angles.
-            </p>
-            <p>
-                Use your mouse wheel to zoom in or out of the scene.
-                Watch how the stars closer to the central massive object appear more
-                distorted.
-            </p>
-        </section>
-
-        <section id="hashtags">
-            <p>
-                #GravitationalLensing #Astrophysics #InteractiveSimulation #SpaceVisualization #Cosmology #BlackHoles #GeneralRelativity #StellarDynamics #SpacetimeDistortion #P5js #CreativeCoding #ScienceVisualization
-            </p>
-        </section>
-    </main>
-
-    <footer>
-        <p>CreativeCommons Attribution NonCommercial ShareAlike</p>
-    </footer>
+        </details>
+         </div>
 
     <script src="sketch.js"></script>
 
