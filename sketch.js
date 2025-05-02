@@ -223,3 +223,82 @@ function mouseWheel(event) {
    zoom = constrain(zoom, 0.02, 30); // Wider zoom range
    return false; // Prevent page scrolling
 }
+
+// ... (keep all existing code) ...
+
+function setup() {
+  console.log("p5 setup() started"); // <<< ADD THIS
+  // Create canvas filling the window
+  canvas = createCanvas(windowWidth, windowHeight, WEBGL);
+  console.log("Canvas created:", width, height); // <<< ADD THIS
+  canvas.parent('canvas-container'); // Attach to the container div
+  console.log("Canvas parented"); // <<< ADD THIS
+
+  // Define massive object (acts as the lens)
+  massiveObject = {
+    x: 0,
+    y: 0,
+    z: 0,
+  };
+   console.log("Massive object defined"); // <<< ADD THIS
+
+  // Create background galaxies spread wider and deeper
+  let spread = max(width, height) * 4; // Increased spread further
+  let depth = spread * 2;
+  galaxies = []; // Ensure galaxies array is clear before populating
+  console.log("Creating galaxies..."); // <<< ADD THIS
+  for (let i = 0; i < numGalaxies; i++) {
+    // --- Galaxy Color ---
+    let r = random(180, 255);
+    let g = random(180, 255);
+    let b = random(180, 255);
+    let randColor = random();
+    if (randColor < 0.3) { b = 255; g = random(180, 230); r = random(180, 230); }
+    else if (randColor < 0.6) { b = random(150, 200); g = random(200, 255); r = 255; }
+    let distanceFactor = map(random(-depth, -depth * 0.5), -depth, -depth*0.5, 0.7, 1.2);
+    let galaxySize = random(1.5, 4.5) * distanceFactor;
+
+    galaxies.push({
+      x: random(-spread, spread), y: random(-spread, spread), z: random(-depth, -depth * 0.5),
+      size: galaxySize, color: color(r, g, b)
+    });
+  }
+  console.log(galaxies.length + " galaxies created."); // <<< ADD THIS
+  console.log("p5 setup() finished"); // <<< ADD THIS
+}
+
+function windowResized() {
+  console.log("Window resized"); // <<< ADD THIS
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+function draw() {
+  // console.log("Draw loop running, frame:", frameCount); // <<< ADD THIS (can be very noisy)
+  if (frameCount < 2) { // Log only for the first frame to reduce noise
+      console.log("p5 draw() started");
+  }
+
+  // ... (rest of draw function) ...
+
+  // Example: Check if galaxies array exists and has items before looping
+  if (!galaxies || galaxies.length === 0) {
+      if(frameCount < 2) console.warn("Galaxies array is missing or empty in draw loop!");
+      // Optional: You could draw a message or skip drawing galaxies
+      // fill(255);
+      // text("Loading galaxies...", -100, 0);
+      // return; // Or simply return to avoid errors
+  } else {
+       // --- Draw Galaxies with Lensing ---
+      for (let gal of galaxies) {
+          // ... (rest of galaxy drawing code) ...
+      }
+  }
+
+  // ... (rest of draw function) ...
+
+} // End draw()
+
+// ... (keep rest of the functions: drawLensGlow, calculateDistortion, mouse interactions) ...
+
+// Add a final check to see if the script loaded at all
+console.log("sketch.js script loaded and parsed"); // <<< ADD THIS AT THE VERY END
